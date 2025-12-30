@@ -54,33 +54,43 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 - Pinecone account with an index created (1536 dimensions)
 - OpenRouter API key (for both LLM and embeddings)
 
-### Backend
+### Backend (Recommended: SAM Local)
 
-```bash
-cd backend
-pnpm install
+We use **AWS SAM Local** to run the API because it simulates the exact Lambda environment (including Docker).
 
-# Create .env file with your API keys
-cp .env.example .env
-# Edit .env with your keys
+1.  **Install Prerequisites**:
+    *   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Must be running)
+    *   [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 
-# Start local development server
-npx ts-node local-server.ts
-```
+2.  **Setup Environment**:
+    ```bash
+    cd backend
+    pnpm install
+    
+    # Create .env with your keys
+    cp .env.example .env
+    # Edit .env with your real keys
+    
+    # Generate the SAM-compatible env.json from your .env
+    node generate-env-json.js
+    ```
 
-The backend runs on `http://localhost:3001`.
+3.  **Run the API**:
+    ```bash
+    # Build the project
+    sam build
 
-### ⚠️ Local Development Limitations
-The `local-server.ts` script mocks API Gateway to run Lambda handlers locally, but it does **not** simulate the full AWS environment:
+    # Start the local API Gateway
+    sam local start-api --env-vars env.json
+    ```
+    The API runs on `http://127.0.0.1:3000`.
 
-1.  **Async Ingestion (SQS/Events)**:
-    -   `POST /ingest` will queue messages to the *real* SQS queue (if credentials allow), but the *real* deployed worker will process them. The local server does not run a worker process to poll SQS.
-    -   **Direct S3 Uploads**: Files uploaded via `GET /upload-url` go to the *real* S3 bucket. This triggers an S3 event for the *real* deployed Lambda, not your local code.
-
-2.  **Permissions**:
-    -   Local execution requires valid AWS credentials in your environment (via `.aws/credentials` or env vars) to access S3, SQS, and Textract.
-
-**Recommendation**: Use `npx ts-node local-server.ts` for testing `POST /ask` and basic API logic, but deploy to AWS (`sam deploy`) to fully test async workflows and file processing.
+4.  **Legacy Method (No Docker)**:
+    If you cannot run Docker, you can use the simple Node.js runner:
+    ```bash
+    npx ts-node local-server.ts
+    ```
+    *Note: This does not support async ingestion or textract.*
 
 ### Frontend
 

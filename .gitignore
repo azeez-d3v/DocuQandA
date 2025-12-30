@@ -34,3 +34,7 @@ next-env.d.ts
 .aws/*
 .aws-sam*
 node_modules*
+
+SYSTEM_OVERVIEW.md
+
+env.json
