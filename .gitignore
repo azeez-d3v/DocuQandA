@@ -29,6 +29,7 @@ next-env.d.ts
 
 
 .agent/*
+#
 
 .aws/*
 .aws-sam*
