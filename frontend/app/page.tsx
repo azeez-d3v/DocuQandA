@@ -20,7 +20,7 @@ interface Message {
 
 export default function HomePage() {
   const [messages, setMessages] = useState<Message[]>([])
-  const [documentCount, setDocumentCount] = useState(0)
+  const [documentCount, setDocumentCount] = useState<number | null>(null)
   const [hasStarted, setHasStarted] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -69,7 +69,7 @@ export default function HomePage() {
     // Handle "auto" mode
     let topK: number
     if (data.model === "auto") {
-      topK = Math.min(3, Math.max(1, documentCount))
+      topK = Math.min(3, Math.max(1, documentCount || 0))
     } else {
       topK = Number.parseInt(data.model.split("-")[0]) || 3
     }

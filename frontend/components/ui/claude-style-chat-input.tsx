@@ -197,7 +197,7 @@ function ModelSelector({
 interface ClaudeChatInputProps {
   placeholder?: string
   onSendMessage: (data: { message: string; model: string }) => void
-  documentCount?: number
+  documentCount?: number | null
 }
 
 export function ClaudeChatInput({ placeholder = "How can I help you today?", onSendMessage, documentCount = 0 }: ClaudeChatInputProps) {
@@ -212,23 +212,31 @@ export function ClaudeChatInput({ placeholder = "How can I help you today?", onS
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Generate dynamic models based on document count
-  const models: Model[] = [
-    { id: "auto", name: "Auto", description: `Smart: uses ${Math.min(3, Math.max(1, documentCount))} sources` },
-    { id: "1-source", name: "1 source", description: "Retrieve 1 relevant document" },
-  ]
+  const models: Model[] = []
 
-  // Add more options based on document count
-  if (documentCount >= 2) {
-    models.push({ id: "2-sources", name: "2 sources", description: "Retrieve 2 relevant documents" })
-  }
-  if (documentCount >= 3) {
-    models.push({ id: "3-sources", name: "3 sources", description: "Retrieve 3 relevant documents" })
-  }
-  if (documentCount >= 5) {
-    models.push({ id: "5-sources", name: "5 sources", description: "Retrieve 5 relevant documents" })
-  }
-  if (documentCount >= 10) {
-    models.push({ id: "10-sources", name: "10 sources", description: "Retrieve up to 10 documents" })
+  // Handle null as loading (effectively 0 for logic but distinct for UI)
+  const safeCount = documentCount ?? 0
+
+  if (safeCount > 0) {
+    models.push({ id: "auto", name: "Auto", description: `Smart: uses ${Math.min(3, safeCount)} sources` })
+    models.push({ id: "1-source", name: "1 source", description: "Retrieve 1 relevant document" })
+
+    // Add more options based on document count
+    if (safeCount >= 2) {
+      models.push({ id: "2-sources", name: "2 sources", description: "Retrieve 2 relevant documents" })
+    }
+    if (safeCount >= 3) {
+      models.push({ id: "3-sources", name: "3 sources", description: "Retrieve 3 relevant documents" })
+    }
+    if (safeCount >= 5) {
+      models.push({ id: "5-sources", name: "5 sources", description: "Retrieve 5 relevant documents" })
+    }
+    if (safeCount >= 10) {
+      models.push({ id: "10-sources", name: "10 sources", description: "Retrieve up to 10 documents" })
+    }
+  } else {
+    // Default for 0 documents (or null/loading which will result in no warning but default model)
+    models.push({ id: "auto", name: "General Knowledge", description: "No documents available" })
   }
 
   useEffect(() => {
@@ -323,7 +331,41 @@ export function ClaudeChatInput({ placeholder = "How can I help you today?", onS
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <div className="flex flex-col mx-2 md:mx-0 items-stretch transition-all duration-200 relative z-10 rounded-2xl cursor-text border border-bg-300 shadow-[0_0_15px_rgba(0,0,0,0.08)] hover:shadow-[0_0_20px_rgba(0,0,0,0.12)] focus-within:shadow-[0_0_25px_rgba(0,0,0,0.15)] bg-bg-100">
+      {/* Warning Banner for No Documents - Positioned outside and overlapping */}
+      <div
+        className={`px-3 md:px-2 relative z-0 transition-all duration-300 ease-[cubic-bezier(0.165,0.85,0.45,1)] origin-bottom ${documentCount === 0
+          ? "opacity-100 max-h-[100px] translate-y-0"
+          : "opacity-0 max-h-0 translate-y-2 pointer-events-none"
+          }`}
+      >
+        <div style={{ height: 'auto' }}>
+          <div className="w-full border-0.5 relative z-[5] px-3.5 -mb-2 rounded-t-xl border-b-0 pb-3 pt-2 bg-[#F2F0E9] border-transparent">
+            <div className="w-full">
+              <div className="flex w-full flex-col items-center md:flex-row gap-2">
+                <div className="flex flex-row items-center gap-2 md:w-full text-[#5E5B54]">
+                  <div>
+                    <div className="text-[13px]">
+                      No documents found. Using <span className="underline underline-offset-[3px] decoration-[color-mix(in_srgb,currentColor,transparent_60%)]">general knowledge</span> only.
+                    </div>
+                  </div>
+                </div>
+                <div className="-mt-px w-full whitespace-nowrap md:w-fit">
+                  <a
+                    href="/docs"
+                    className="inline underline underline-offset-[3px] decoration-[color-mix(in_srgb,currentColor,transparent_60%)] hover:decoration-current cursor-pointer text-[13px] font-medium text-[#5E5B54]"
+                  >
+                    Upload Docs
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={`flex flex-col mx-2 md:mx-0 items-stretch transition-all duration-200 relative z-10 rounded-2xl cursor-text border shadow-[0_0_15px_rgba(0,0,0,0.08)] hover:shadow-[0_0_20px_rgba(0,0,0,0.12)] focus-within:shadow-[0_0_25px_rgba(0,0,0,0.15)] bg-bg-100 ${documentCount === 0 ? "border-[#E5E3DC]" : "border-bg-300"
+        }`}>
+
         <div className="flex flex-col px-3 pt-3 pb-2 gap-2">
           {(files.length > 0 || pastedContent.length > 0) && (
             <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2 px-1">
@@ -382,7 +424,9 @@ export function ClaudeChatInput({ placeholder = "How can I help you today?", onS
             </div>
 
             <div className="flex flex-row items-center min-w-0 gap-1">
-              <ModelSelector models={models} selectedModel={selectedModel} onSelect={setSelectedModel} />
+              {(documentCount ?? 0) > 0 && (
+                <ModelSelector models={models} selectedModel={selectedModel} onSelect={setSelectedModel} />
+              )}
               <button
                 onClick={handleSend}
                 disabled={!hasContent}

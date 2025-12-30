@@ -2,6 +2,16 @@
 
 All notable changes to the Doc Q&A Portal will be documented in this file.
 
+## [1.3.2] - 2025-12-30
+
+### Added
+
+#### UI/UX Refinements
+- **Empty Document State**: Added a "No documents found" warning banner in the chat input when the index is empty
+- **Claude-style Warning**: Replicated Claude's UI warning banner style (colors, layout, behavior)
+- **Smooth Transitions**: Added CSS transitions for the warning banner to animate in/out without layout shifts
+- **Loading State Fix**: Fixed flickering warning banner on initial page load by initializing count to `null`
+
 ## [1.3.1] - 2025-12-30
 
 ### Added
