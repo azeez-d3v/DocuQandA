@@ -193,7 +193,6 @@ Resources:
   # S3 Bucket for storing documents before processing
   DocQaBucket:
     Type: AWS::S3::Bucket
-    DependsOn: IngestQueue
     Properties:
       BucketName: !Sub "doc-qa-ingest-${AWS::AccountId}"
       CorsConfiguration:
