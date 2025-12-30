@@ -69,6 +69,18 @@ npx ts-node local-server.ts
 
 The backend runs on `http://localhost:3001`.
 
+### ⚠️ Local Development Limitations
+The `local-server.ts` script mocks API Gateway to run Lambda handlers locally, but it does **not** simulate the full AWS environment:
+
+1.  **Async Ingestion (SQS/Events)**:
+    -   `POST /ingest` will queue messages to the *real* SQS queue (if credentials allow), but the *real* deployed worker will process them. The local server does not run a worker process to poll SQS.
+    -   **Direct S3 Uploads**: Files uploaded via `GET /upload-url` go to the *real* S3 bucket. This triggers an S3 event for the *real* deployed Lambda, not your local code.
+
+2.  **Permissions**:
+    -   Local execution requires valid AWS credentials in your environment (via `.aws/credentials` or env vars) to access S3, SQS, and Textract.
+
+**Recommendation**: Use `npx ts-node local-server.ts` for testing `POST /ask` and basic API logic, but deploy to AWS (`sam deploy`) to fully test async workflows and file processing.
+
 ### Frontend
 
 ```bash
