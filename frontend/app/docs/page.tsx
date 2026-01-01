@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { EditDocumentDialog } from "@/components/edit-document-dialog"
 import { useToast } from "@/hooks/use-toast"
+import { useDocuments } from "@/hooks/use-documents"
 import { Toaster } from "@/components/ui/toaster"
-import { ingestDocuments, listDocuments, deleteDocument, getDocumentContent, getUploadUrl, uploadFileToS3, DocumentInfo } from "@/lib/api"
+import { ingestDocuments, deleteDocument, getDocumentContent, getUploadUrl, uploadFileToS3, DocumentInfo } from "@/lib/api"
 import { X, Loader2, Trash2, RefreshCw, Pencil, Upload, CloudUpload, Maximize } from "lucide-react"
 import { Icons } from "@/components/ui/claude-style-chat-input"
 
@@ -25,9 +26,11 @@ export default function DocsPage() {
   const [docTitle, setDocTitle] = useState("")
   const [docContent, setDocContent] = useState("")
   const [pendingDocs, setPendingDocs] = useState<PendingDocument[]>([])
-  const [ingestedDocs, setIngestedDocs] = useState<DocumentInfo[]>([])
+
+  // Use SWR hook for cached document list
+  const { documents: ingestedDocs, isLoading: listLoading, mutate: refreshDocs } = useDocuments()
+
   const [loading, setLoading] = useState(false)
-  const [listLoading, setListLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editDoc, setEditDoc] = useState<{ docId: string; title: string; content: string } | null>(null)
@@ -37,22 +40,6 @@ export default function DocsPage() {
   const [directUploading, setDirectUploading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const { toast } = useToast()
-
-  const fetchDocuments = async () => {
-    setListLoading(true)
-    try {
-      const result = await listDocuments()
-      setIngestedDocs(result.documents || [])
-    } catch (err) {
-      console.error("Failed to fetch documents:", err)
-    } finally {
-      setListLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchDocuments()
-  }, [])
 
   // Handle file upload - reads .md/.txt files
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,7 +122,7 @@ export default function DocsPage() {
 
       // Refresh document list after a short delay to allow processing
       setTimeout(() => {
-        fetchDocuments()
+        refreshDocs()
       }, 2000)
 
     } catch (err) {
@@ -195,7 +182,7 @@ export default function DocsPage() {
       })
       setPendingDocs([])
       // Refresh the document list
-      await fetchDocuments()
+      await refreshDocs()
     } catch (err) {
       toast({
         title: "Error",
@@ -215,7 +202,7 @@ export default function DocsPage() {
         title: "Deleted",
         description: `Document "${docId}" deleted successfully`,
       })
-      await fetchDocuments()
+      await refreshDocs()
     } catch (err) {
       toast({
         title: "Error",
@@ -265,7 +252,7 @@ export default function DocsPage() {
       })
       setEditDialogOpen(false)
       setEditDoc(null)
-      await fetchDocuments()
+      await refreshDocs()
     } catch (err) {
       toast({
         title: "Error",
@@ -553,7 +540,7 @@ export default function DocsPage() {
               <CardDescription className="text-text-400">Documents stored in your knowledge base</CardDescription>
             </div>
             <Button
-              onClick={fetchDocuments}
+              onClick={() => refreshDocs()}
               variant="outline"
               size="sm"
               disabled={listLoading}

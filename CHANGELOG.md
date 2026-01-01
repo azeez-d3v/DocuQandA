@@ -2,6 +2,16 @@
 
 All notable changes to the Doc Q&A Portal will be documented in this file.
 
+## [1.4.1] - 2026-01-02
+
+### Added
+
+#### SWR Caching for Document List
+- **`useDocuments` hook**: Caches document list across page navigations
+- **Request deduplication**: Multiple components share single API call
+- **Automatic revalidation**: Cache invalidates after mutations (ingest/delete)
+- **Zero redundant calls**: Navigate Chat → Docs → Chat = 1 API call (was 3)
+
 ## [1.4.0] - 2026-01-01
 
 ### Added

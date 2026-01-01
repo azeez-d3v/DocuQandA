@@ -334,6 +334,7 @@ The API Gateway includes built-in rate limiting to prevent abuse:
 
 ### Performance Optimizations
 
+- **SWR Caching**: Document list cached across page navigations (no redundant API calls)
 - **Batch Vector Fetching**: Document listing uses optimized batch queries (10-100x faster)
 - **Parallel Ingestion**: Multiple documents are processed concurrently
 - **Shared Service Clients**: Single OpenAI client instance across services

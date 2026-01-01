@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import { Navigation } from "@/components/navigation"
 import { ClaudeChatInput, Icons } from "@/components/ui/claude-style-chat-input"
 import { ShiningText } from "@/components/ui/shining-text"
-import { askQuestion, listDocuments } from "@/lib/api"
+import { askQuestion } from "@/lib/api"
+import { useDocuments } from "@/hooks/use-documents"
 import { Copy, RotateCcw } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 
@@ -20,19 +21,13 @@ interface Message {
 
 export default function HomePage() {
   const [messages, setMessages] = useState<Message[]>([])
-  const [documentCount, setDocumentCount] = useState<number | null>(null)
+  const { documents, isLoading: docsLoading } = useDocuments()
+  const documentCount = docsLoading ? null : documents.length
   const [hasStarted, setHasStarted] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Derive loading state from messages (if any message is loading)
   const isLoading = messages.some((m) => m.isLoading)
-
-  // Fetch document count on mount
-  useEffect(() => {
-    listDocuments()
-      .then((result) => setDocumentCount(result.documents?.length || 0))
-      .catch(() => setDocumentCount(0))
-  }, [])
 
   // Scroll to bottom when messages change
   useEffect(() => {
