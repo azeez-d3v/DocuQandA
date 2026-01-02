@@ -2,6 +2,34 @@
 
 All notable changes to the Doc Q&A Portal will be documented in this file.
 
+## [1.5.2] - 2026-01-03
+
+### Changed
+
+#### Dynamic Relevance Threshold for Source Filtering
+**Previous:** Fixed threshold of `0.5` - sources only shown if similarity score ≥ 0.5
+
+**Current:** Dynamic threshold = `max(topScore × 0.7, 0.25)`
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Fixed 0.5** | Simple, predictable | Filters out relevant sources on multi-topic queries |
+| **Dynamic 70%** | Adapts to query complexity, shows all relevant sources | Slightly more complex logic |
+
+**Result:** Multi-topic queries like "return policy AND shipping" now correctly show sources from both documents instead of just one.
+
+#### Filter Before LLM (Scalability Optimization)
+**Previous:** All Pinecone chunks sent to LLM, filtered only for source display
+
+**Current:** Chunks filtered by dynamic threshold BEFORE sending to LLM
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Previous (filter after)** | LLM sees all context | More tokens, higher cost, slower |
+| **Current (filter before)** | Fewer tokens, faster, cheaper, cleaner answers | Relies on score accuracy |
+
+**Result:** LLM only processes relevant chunks → reduced token usage, faster responses, consistent sources.
+
 ## [1.5.1] - 2026-01-02
 
 ### Added

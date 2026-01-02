@@ -252,8 +252,10 @@ Update `NEXT_PUBLIC_API_URL` to your API Gateway endpoint.
 - **Backend**: Appends previous 10 messages to the system prompt for context continuity.
 
 ### Source Filtering
-- Similarity threshold of 0.5 filters irrelevant sources
-- Prevents showing unrelated documents for generic questions
+- **Dynamic threshold**: `max(topScore × 0.7, 0.25)` - adapts to query complexity
+- Multi-topic queries show sources from all relevant documents
+- Floor of 0.25 prevents showing low-quality matches
+- **Filter before LLM**: Only relevant chunks sent to LLM (scalable, cheaper)
 
 ### No Authentication
 - As per requirements, no auth implemented

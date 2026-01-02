@@ -48,12 +48,16 @@ export async function handler(
             retrievedChunks = await queryByVector(questionEmbedding, request.topK);
         }
 
-        // Generate answer using LLM with retrieved context and chat history
-        const answer = await answerWithContext(request.question, retrievedChunks, request.messages);
+        // Dynamic threshold: filter within 30% of top score, with floor of 0.25
+        // This adapts to query complexity - strict for clear matches, lenient for multi-topic
+        const topScore = retrievedChunks.length > 0
+            ? Math.max(...retrievedChunks.map(c => c.score))
+            : 0;
+        const dynamicThreshold = Math.max(topScore * 0.7, 0.25);
+        const relevantChunks = retrievedChunks.filter(chunk => chunk.score >= dynamicThreshold);
 
-        // Filter chunks by relevance score - don't show sources for generic questions
-        const RELEVANCE_THRESHOLD = 0.5;
-        const relevantChunks = retrievedChunks.filter(chunk => chunk.score >= RELEVANCE_THRESHOLD);
+        // Generate answer using LLM with ONLY relevant chunks (more efficient, cleaner context)
+        const answer = await answerWithContext(request.question, relevantChunks, request.messages);
 
         // Deduplicate sources (same doc might appear in multiple chunks)
         const sourceMap = new Map<string, Source>();
